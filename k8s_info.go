@@ -88,6 +88,7 @@ func (p *PodInfo) Info(verbose int) string {
 // helper function to execute command
 func exe(command string, args ...string) ([]string, error) {
 	var out []string
+	log.Println("command", command, args)
 	cmd := exec.Command(command, args...)
 	stdout, err := cmd.Output()
 	if err != nil {
@@ -160,12 +161,14 @@ func clusterInfo() []PodInfo {
 			log.Println("ERROR", err)
 			continue
 		}
+		log.Println("pods", pods)
 		for _, pod := range pods {
 			p, err := podInfo(pod, ns)
 			if err != nil {
 				log.Println("ERROR", err)
 				continue
 			}
+			log.Println("pod", p)
 			info = append(info, p)
 		}
 	}
