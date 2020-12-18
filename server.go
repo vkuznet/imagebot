@@ -15,14 +15,12 @@ import (
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port             int    `json:"port"`      // server port number
-	Base             string `json:"base"`      // base URL
-	Verbose          int    `json:"verbose"`   // verbose output
-	ServerCrt        string `json:"serverCrt"` // path to server crt file
-	ServerKey        string `json:"serverKey"` // path to server key file
-	LogFile          string `json:"logFile"`
-	UTC              bool   `json:"utc"`
-	PrintMonitRecord bool   `json:"printMonitRecord"`
+	Port      int    `json:"port"`      // server port number
+	Base      string `json:"base"`      // base URL
+	Verbose   int    `json:"verbose"`   // verbose output
+	ServerCrt string `json:"serverCrt"` // path to server crt file
+	ServerKey string `json:"serverKey"` // path to server key file
+	UTC       bool   `json:"utc"`
 }
 
 // Config variable represents configuration object
@@ -119,9 +117,20 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// StatusHandler represents incoming request handler
+func StatusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	return
+}
+
 // http server implementation
 func server(serverCrt, serverKey string) {
 	// the request handler
+	http.HandleFunc(fmt.Sprintf("%s/status", Config.Base), StatusHandler)
 	http.HandleFunc(fmt.Sprintf("%s/", Config.Base), RequestHandler)
 
 	// start HTTP or HTTPs server based on provided configuration

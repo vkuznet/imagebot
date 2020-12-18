@@ -7,8 +7,6 @@ import (
 	"os"
 	"runtime"
 	"time"
-
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 )
 
 // version of the code
@@ -40,14 +38,6 @@ func main() {
 	log.SetFlags(0)
 	if Config.Verbose > 0 {
 		log.SetFlags(log.Lshortfile)
-	}
-	log.SetOutput(new(logWriter))
-	if Config.LogFile != "" {
-		rl, err := rotatelogs.New(Config.LogFile + "-%Y%m%d")
-		if err == nil {
-			rotlogs := rotateLogWriter{RotateLogs: rl}
-			log.SetOutput(rotlogs)
-		}
 	}
 	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config)

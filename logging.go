@@ -10,11 +10,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
-
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 )
 
 // LogRecord represents data we can send to StompAMQ or HTTP endpoint
@@ -59,23 +56,6 @@ func utcMsg(data []byte) string {
 	return msg
 }
 
-// custom rotate logger
-type rotateLogWriter struct {
-	RotateLogs *rotatelogs.RotateLogs
-}
-
-func (w rotateLogWriter) Write(data []byte) (int, error) {
-	return w.RotateLogs.Write([]byte(utcMsg(data)))
-}
-
-// custom logger
-type logWriter struct {
-}
-
-func (writer logWriter) Write(data []byte) (int, error) {
-	return fmt.Print(utcMsg(data))
-}
-
 // helper function to log every single user request, here we pass pointer to status code
 // as it may change through the handler while we use defer logRequest
 func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, status int, tstamp int64, bytesOut int64) {
@@ -114,14 +94,12 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, status 
 		RequestTime:    time.Since(start).Seconds(),
 		Timestamp:      tstamp,
 	}
-	if Config.PrintMonitRecord {
-		data, err := monitRecord(rec)
-		if err == nil {
-			fmt.Println(string(data))
-		} else {
-			log.Println("unable to produce record for MONIT, error", err)
-		}
+	data, err := json.Marshal(rec)
+	if err != nil {
+		log.Println("ERROR", err)
 	}
+	log.Println(string(data))
+
 }
 
 // helper function to extract service API from the record URI
@@ -148,23 +126,4 @@ func getSystem(uri string) string {
 		system = "base"
 	}
 	return system
-}
-
-// helper function to prepare record for MONIT
-func monitRecord(rec LogRecord) ([]byte, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Println("Unable to get hostname", err)
-	}
-	ltype := "auth"      // defined by MONIT team
-	producer := "cmsweb" // defined by MONIT team
-	r := HTTPRecord{
-		Producer:  producer,
-		Type:      ltype,
-		Timestamp: rec.Timestamp,
-		Host:      hostname,
-		Data:      rec,
-	}
-	data, err := json.Marshal(r)
-	return data, err
 }
