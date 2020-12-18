@@ -20,8 +20,9 @@ type Configuration struct {
 	Verbose    int      `json:"verbose"`    // verbose output
 	ServerCrt  string   `json:"serverCrt"`  // path to server crt file
 	ServerKey  string   `json:"serverKey"`  // path to server key file
-	Namespaces []string `json:"namespaces"` // list of namespaces
+	Namespaces []string `json:"namespaces"` // list of allowed namespaces
 	UTC        bool     `json:"utc"`        // use UTC for logging or not
+	Services   []string `json:services`     // list of allowed services
 }
 
 // Config variable represents configuration object
@@ -68,6 +69,7 @@ func changeTag(s string, r Request) string {
 func exeRequest(r Request) error {
 	log.Printf("execute request %+v\n", r)
 	var args []string
+
 	// get yaml of our request image
 	args = []string{"get", "deployment", r.Name, "-n", r.Namespace, "-o", "yaml"}
 	cmd := exec.Command("kubectl", args...)
@@ -122,6 +124,19 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		errorHandler(w, r, msg, err)
 		return
 	}
+	// check if given request is allowed
+	if !InList(imgRequest.Name, Config.Services) {
+		msg := fmt.Sprintf("provided service %s is not allowed", imgRequest.Name)
+		errorHandler(w, r, msg, nil)
+		return
+	}
+	if !InList(imgRequest.Namespace, Config.Namespaces) {
+		msg := fmt.Sprintf("provided namespace %s is not allowed", imgRequest.Namespace)
+		errorHandler(w, r, msg, nil)
+		return
+	}
+
+	// execute request
 	err = exeRequest(imgRequest)
 	if err != nil {
 		msg := "unable to execute request"
