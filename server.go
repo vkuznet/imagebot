@@ -97,13 +97,14 @@ func exeRequest(r Request) error {
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		info := clusterInfo()
-		w.WriteHeader(http.StatusOK)
+		log.Println("cluster info: %+v", info)
 		data, err := json.Marshal(info)
 		if err != nil {
 			msg := "unable to marshal server info"
 			errorHandler(w, r, msg, err)
 			return
 		}
+		w.WriteHeader(http.StatusOK)
 		w.Write(data)
 		return
 	}

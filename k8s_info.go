@@ -148,7 +148,12 @@ func podInfo(pod, ns string) (PodInfo, error) {
 // helper function to return cluster info
 func clusterInfo() []PodInfo {
 	var info []PodInfo
-	nss, _ := namespaces()
+	nss, err := namespaces()
+	if err != nil {
+		log.Println("ERROR", err)
+		return info
+	}
+	log.Println("namespaces", nss)
 	for _, ns := range nss {
 		pods, err := pods(ns)
 		if err != nil {
@@ -157,7 +162,7 @@ func clusterInfo() []PodInfo {
 		}
 		for _, pod := range pods {
 			p, err := podInfo(pod, ns)
-			if err == nil {
+			if err != nil {
 				log.Println("ERROR", err)
 				continue
 			}
