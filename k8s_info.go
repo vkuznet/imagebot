@@ -27,13 +27,13 @@ type ContainerStatus struct {
 }
 
 type Metadata struct {
-	Annotations       map[string]string        `json:"Annotations"`
-	CreationTimestamp string                   `json:"CreationTimestamp"`
-	GenerateName      string                   `json:"GenerateName"`
-	Labels            map[string]string        `json:"Labels"`
-	Name              string                   `json:"Name"`
-	Namespace         string                   `json:"Namespace"`
-	OwnerReferences   []map[string]interface{} `json:"OwnerReferences"`
+	//     Annotations       map[string]string        `json:"Annotations"`
+	//     CreationTimestamp string                   `json:"CreationTimestamp"`
+	//     GenerateName      string                   `json:"GenerateName"`
+	//     Labels            map[string]string        `json:"Labels"`
+	Name      string `json:"Name"`
+	Namespace string `json:"Namespace"`
+	//     OwnerReferences   []map[string]interface{} `json:"OwnerReferences"`
 }
 
 type Spec struct {
@@ -53,11 +53,11 @@ type Status struct {
 }
 
 type PodInfo struct {
-	ApiVersion string   `json:"ApiVersion"`
-	Kind       string   `json:"Kind"`
-	Metadata   Metadata `json:"Metadata"`
-	Spec       Spec     `json:"Spec"`
-	Status     Status   `json:Status`
+	//     ApiVersion string   `json:"ApiVersion"`
+	//     Kind       string   `json:"Kind"`
+	Metadata Metadata `json:"Metadata"`
+	//     Spec       Spec     `json:"Spec"`
+	Status Status `json:Status`
 }
 
 func (p *PodInfo) Info(verbose int) string {
