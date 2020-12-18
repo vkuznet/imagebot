@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 	"regexp"
 	"strings"
 
@@ -70,7 +71,8 @@ func exeRequest(r Request) error {
 	var args []string
 	// get yaml of our request image
 	args = []string{"get", "deployment", r.Name, "-n", r.Namespace, "-o", "yaml"}
-	out, err := exe("kubectl", args...)
+	cmd := exec.Command("kubecvtl", args...)
+	out, err := cmd.Output()
 	if err != nil {
 		return err
 	}
