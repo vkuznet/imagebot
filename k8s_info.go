@@ -162,6 +162,7 @@ func InList(a string, list []string) bool {
 
 // helper function to return cluster info
 func clusterInfo(allowed []string) []PodInfo {
+	log.Println("allowed namespaces", allowed)
 	var info []PodInfo
 	nss, err := namespaces()
 	if err != nil {
