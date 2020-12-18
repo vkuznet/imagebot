@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
-	"strings"
 
 	_ "expvar"         // to be used for monitoring, see https://github.com/divan/expvarmon
 	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
@@ -71,14 +70,15 @@ func exeRequest(r Request) error {
 	var args []string
 	// get yaml of our request image
 	args = []string{"get", "deployment", r.Name, "-n", r.Namespace, "-o", "yaml"}
-	cmd := exec.Command("kubecvtl", args...)
+	cmd := exec.Command("kubectl", args...)
 	out, err := cmd.Output()
 	if err != nil {
 		return err
 	}
-	log.Println("YAML", strings.Join(out, "\n"))
+	yaml := string(out)
+	log.Println("YAML", yaml)
 	// change image tag
-	content := changeTag(strings.Join(out, "\n"), r)
+	content := changeTag(yaml, r)
 	log.Println("NEW YAML", content)
 
 	// write new yml file
@@ -90,7 +90,8 @@ func exeRequest(r Request) error {
 
 	// kubectl apply -f file.yml
 	args = []string{"apply", "-f", fname}
-	out, err = exe("kubectl", args...)
+	cmd = exec.Command("kubectl", args...)
+	out, err = cmd.Output()
 	if err != nil {
 		return err
 	}
