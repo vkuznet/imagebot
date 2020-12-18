@@ -43,19 +43,22 @@ func parseConfig(configFile string) error {
 	return nil
 }
 
+// helper function to hangle errors
 func errorHandler(w http.ResponseWriter, r *http.Request, msg string, err error) {
 	log.Println(msg, err)
 	w.Write([]byte(msg))
 }
 
+// Request represents image request to the server
 type Request struct {
-	Namespace string
-	Name      string
-	Tag       string
-	Repo      string
-	Token     string
+	Namespace string // namespace to use
+	Name      string // name of the image
+	Tag       string // tag of the image
+	Repo      string // repository of the image
+	Token     string // authentication token
 }
 
+// helper function to change tag in provided string (yaml content)
 func changeTag(s string, r Request) string {
 	pat := fmt.Sprintf("image: %s/%s:.*", r.Repo, r.Name)
 	re := regexp.MustCompile(pat)
@@ -92,6 +95,7 @@ func exeRequest(r Request) error {
 	return nil
 }
 
+// RequestHandler represents incoming request handler
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		w.WriteHeader(http.StatusOK)
