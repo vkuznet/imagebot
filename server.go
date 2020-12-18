@@ -15,12 +15,13 @@ import (
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port      int    `json:"port"`      // server port number
-	Base      string `json:"base"`      // base URL
-	Verbose   int    `json:"verbose"`   // verbose output
-	ServerCrt string `json:"serverCrt"` // path to server crt file
-	ServerKey string `json:"serverKey"` // path to server key file
-	UTC       bool   `json:"utc"`
+	Port       int      `json:"port"`      // server port number
+	Base       string   `json:"base"`      // base URL
+	Verbose    int      `json:"verbose"`   // verbose output
+	ServerCrt  string   `json:"serverCrt"` // path to server crt file
+	ServerKey  string   `json:"serverKey"` // path to server key file
+	Namespaces []string `json:"namespace"` // list of namespaces
+	UTC        bool     `json:"utc"`       // use UTC for logging or not
 }
 
 // Config variable represents configuration object
@@ -96,7 +97,7 @@ func exeRequest(r Request) error {
 // RequestHandler represents incoming request handler
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		info := clusterInfo()
+		info := clusterInfo(Config.Namespaces)
 		log.Println("cluster info: %+v", info)
 		data, err := json.Marshal(info)
 		if err != nil {

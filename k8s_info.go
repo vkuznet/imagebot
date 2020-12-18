@@ -146,8 +146,22 @@ func podInfo(pod, ns string) (PodInfo, error) {
 	return rec, err
 }
 
+// InList helper function to check item in a list
+func InList(a string, list []string) bool {
+	check := 0
+	for _, b := range list {
+		if b == a {
+			check += 1
+		}
+	}
+	if check != 0 {
+		return true
+	}
+	return false
+}
+
 // helper function to return cluster info
-func clusterInfo() []PodInfo {
+func clusterInfo(allowed []string) []PodInfo {
 	var info []PodInfo
 	nss, err := namespaces()
 	if err != nil {
@@ -156,6 +170,10 @@ func clusterInfo() []PodInfo {
 	}
 	log.Println("namespaces", nss)
 	for _, ns := range nss {
+		if !InList(ns, allowed) {
+			log.Println("skip", ns)
+			continue
+		}
 		pods, err := pods(ns)
 		if err != nil {
 			log.Println("ERROR", err)
