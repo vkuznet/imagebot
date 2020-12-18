@@ -96,8 +96,15 @@ func exeRequest(r Request) error {
 // RequestHandler represents incoming request handler
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
+		info := clusterInfo()
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hello"))
+		data, err := json.Marshal(info)
+		if err != nil {
+			msg := "unable to marshal server info"
+			errorHandler(w, r, msg, err)
+			return
+		}
+		w.Write(data)
 		return
 	}
 	defer r.Body.Close()

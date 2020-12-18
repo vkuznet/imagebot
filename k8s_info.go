@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"net"
 	"os/exec"
 	"strings"
@@ -142,6 +143,28 @@ func podInfo(pod, ns string) (PodInfo, error) {
 	//     fmt.Println("output of pod info", string(stdout))
 	err = json.Unmarshal(stdout, &rec)
 	return rec, err
+}
+
+// helper function to return cluster info
+func clusterInfo() []PodInfo {
+	var info []PodInfo
+	nss, _ := namespaces()
+	for _, ns := range nss {
+		pods, err := pods(ns)
+		if err != nil {
+			log.Println("ERROR", err)
+			continue
+		}
+		for _, pod := range pods {
+			p, err := podInfo(pod, ns)
+			if err == nil {
+				log.Println("ERROR", err)
+				continue
+			}
+			info = append(info, p)
+		}
+	}
+	return info
 }
 
 // oldmain function
