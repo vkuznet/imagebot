@@ -160,7 +160,6 @@ func clusterInfo(allowed []string) []PodInfo {
 				log.Println("ERROR", err)
 				continue
 			}
-			log.Println("pod", p)
 			info = append(info, p)
 		}
 	}

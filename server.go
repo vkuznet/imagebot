@@ -50,11 +50,11 @@ func errorHandler(w http.ResponseWriter, r *http.Request, msg string, err error)
 
 // Request represents image request to the server
 type Request struct {
-	Namespace string // namespace to use
-	Name      string // name of the image
-	Tag       string // tag of the image
-	Repo      string // repository of the image
-	Token     string // authentication token
+	Namespace string `json:"namespace"` // namespace to use
+	Name      string `json:"name"`      // name of the image
+	Tag       string `json:"tag"`       // tag of the image
+	Repo      string `json:"repo"`      // repository of the image
+	Token     string `json:"token"`     // authentication token
 }
 
 // helper function to change tag in provided string (yaml content)
@@ -74,8 +74,10 @@ func exeRequest(r Request) error {
 	if err != nil {
 		return err
 	}
+	log.Println("YAML", strings.Join(out, "\n"))
 	// change image tag
 	content := changeTag(strings.Join(out, "\n"), r)
+	log.Println("NEW YAML", content)
 
 	// write new yml file
 	fname := fmt.Sprintf("/tmp/%s-%s-%s-%s.yaml", r.Repo, r.Name, r.Namespace, r.Tag)
@@ -98,7 +100,7 @@ func exeRequest(r Request) error {
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		info := clusterInfo(Config.Namespaces)
-		log.Println("cluster info: %+v", info)
+		log.Printf("cluster info: %+v\n", info)
 		data, err := json.Marshal(info)
 		if err != nil {
 			msg := "unable to marshal server info"
