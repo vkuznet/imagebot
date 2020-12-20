@@ -7,6 +7,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"os/exec"
 	"strings"
@@ -60,11 +62,14 @@ type PodInfo struct {
 // helper function to execute command
 func exe(command string, args ...string) ([]string, error) {
 	var out []string
-	log.Println("command", command, args)
+	if Config.Verbose > 0 {
+		log.Println(command, args)
+	}
 	cmd := exec.Command(command, args...)
 	stdout, err := cmd.Output()
 	if err != nil {
-		log.Fatal("ERROR:", err, "while executing", command, args)
+		msg := fmt.Sprintf("%v %v %v", command, args, err)
+		return out, errors.New(msg)
 	}
 	for _, v := range strings.Split(string(stdout), "\n") {
 		if strings.HasPrefix(v, "NAME") {
@@ -150,7 +155,9 @@ func clusterInfo(allowed []string) []PodInfo {
 	}
 	for _, ns := range nss {
 		if !InList(ns, allowed) {
-			log.Println("skip", ns)
+			if Config.Verbose > 0 {
+				log.Println("skip", ns)
+			}
 			continue
 		}
 		pods, err := pods(ns)

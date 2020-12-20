@@ -22,9 +22,9 @@ type Configuration struct {
 	Verbose     int      `json:"verbose"`     // verbose output
 	ServerCrt   string   `json:"serverCrt"`   // path to server crt file
 	ServerKey   string   `json:"serverKey"`   // path to server key file
-	Namespaces  []string `json:"namespaces"`  // list of allowed namespaces
+	Namespaces  []string `json:"namespaces"`  // list allowed namespaces
+	Services    []string `json:services`      // list allowed services
 	UTC         bool     `json:"utc"`         // use UTC for logging or not
-	Services    []string `json:services`      // list of allowed services
 	Token       string   `json:"token"`       // authorization token
 	MonitRecord bool     `json:"monitRecord"` // print on stdout monit record
 }
@@ -110,7 +110,7 @@ func exeRequest(r Request) error {
 func auth(r *http.Request) bool {
 	if arr, ok := r.Header["Authorization"]; ok {
 		token := strings.Replace(arr[0], "Bearer ", "", -1)
-		token := strings.Replace(token, "bearer ", "", -1)
+		token = strings.Replace(token, "bearer ", "", -1)
 		if token == Config.Token {
 			return true
 		}
