@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
+	"time"
 
 	_ "expvar"         // to be used for monitoring, see https://github.com/divan/expvarmon
 	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
@@ -103,6 +104,9 @@ func exeRequest(r Request) error {
 
 // RequestHandler represents incoming request handler
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
+	status := http.StatusOK
+	start := time.Now()
+	defer logRequest(w, r, start, &status)
 	if r.Method == "GET" {
 		info := clusterInfo(Config.Namespaces)
 		log.Printf("cluster info: %+v\n", info)
@@ -112,7 +116,7 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 			errorHandler(w, r, msg, err)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(status)
 		w.Write(data)
 		return
 	}
@@ -143,16 +147,20 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		errorHandler(w, r, msg, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 }
 
 // StatusHandler represents incoming request handler
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
+	status := http.StatusOK
+	start := time.Now()
+	defer logRequest(w, r, start, &status)
 	if r.Method != "GET" {
-		w.WriteHeader(http.StatusInternalServerError)
+		status = http.StatusInternalServerError
+		w.WriteHeader(status)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	return
 }
 

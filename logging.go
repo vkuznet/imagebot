@@ -58,8 +58,9 @@ func utcMsg(data []byte) string {
 
 // helper function to log every single user request, here we pass pointer to status code
 // as it may change through the handler while we use defer logRequest
-func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, status int, tstamp int64, bytesOut int64) {
-	dataMsg := fmt.Sprintf("[data: %v in %v out]", r.ContentLength, bytesOut)
+func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, status *int) {
+	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
+	dataMsg := fmt.Sprintf("[data: %v in]", r.ContentLength)
 	referer := r.Referer()
 	if referer == "" {
 		referer = "-"
@@ -74,16 +75,15 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, status 
 	addr := r.RemoteAddr
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
 	respMsg := fmt.Sprintf("[req: %v]", time.Since(start))
-	log.Printf("%s %s %s %s %d %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, refMsg, respMsg)
+	log.Printf("%s %s %s %s %d %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, *status, dataMsg, refMsg, respMsg)
 	rec := LogRecord{
 		Method:         r.Method,
 		URI:            r.RequestURI,
 		API:            getAPI(r.RequestURI),
 		System:         getSystem(r.RequestURI),
 		BytesIn:        r.ContentLength,
-		BytesOut:       bytesOut,
 		Proto:          r.Proto,
-		Status:         int64(status),
+		Status:         int64(*status),
 		ContentLength:  r.ContentLength,
 		Referer:        referer,
 		UserAgent:      r.Header.Get("User-Agent"),

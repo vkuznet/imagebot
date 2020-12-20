@@ -7,7 +7,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os/exec"
 	"strings"
@@ -65,9 +64,7 @@ func exe(command string, args ...string) ([]string, error) {
 	cmd := exec.Command(command, args...)
 	stdout, err := cmd.Output()
 	if err != nil {
-		fmt.Println("ERROR:", err, "while executing", command, args)
-		panic(err)
-		//         return out, err
+		log.Fatal("ERROR:", err, "while executing", command, args)
 	}
 	for _, v := range strings.Split(string(stdout), "\n") {
 		if strings.HasPrefix(v, "NAME") {
