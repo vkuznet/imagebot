@@ -132,14 +132,22 @@ func InList(a string, list []string) bool {
 
 // helper function to return cluster info
 func clusterInfo(allowed []string) []PodInfo {
-	log.Println("allowed namespaces", allowed)
+	if Config.Verbose > 0 {
+		log.Println("allowed namespaces", allowed)
+	}
+
 	var info []PodInfo
+	if len(allowed) == 0 {
+		return info
+	}
 	nss, err := namespaces()
 	if err != nil {
 		log.Println("ERROR", err)
 		return info
 	}
-	log.Println("namespaces", nss)
+	if Config.Verbose > 0 {
+		log.Println("namespaces", nss)
+	}
 	for _, ns := range nss {
 		if !InList(ns, allowed) {
 			log.Println("skip", ns)
@@ -150,7 +158,9 @@ func clusterInfo(allowed []string) []PodInfo {
 			log.Println("ERROR", err)
 			continue
 		}
-		log.Println("pods", pods)
+		if Config.Verbose > 0 {
+			log.Println("pods", pods)
+		}
 		for _, pod := range pods {
 			p, err := podInfo(pod, ns)
 			if err != nil {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
+	"strings"
 	"time"
 
 	_ "expvar"         // to be used for monitoring, see https://github.com/divan/expvarmon
@@ -16,14 +17,16 @@ import (
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port       int      `json:"port"`       // server port number
-	Base       string   `json:"base"`       // base URL
-	Verbose    int      `json:"verbose"`    // verbose output
-	ServerCrt  string   `json:"serverCrt"`  // path to server crt file
-	ServerKey  string   `json:"serverKey"`  // path to server key file
-	Namespaces []string `json:"namespaces"` // list of allowed namespaces
-	UTC        bool     `json:"utc"`        // use UTC for logging or not
-	Services   []string `json:services`     // list of allowed services
+	Port        int      `json:"port"`        // server port number
+	Base        string   `json:"base"`        // base URL
+	Verbose     int      `json:"verbose"`     // verbose output
+	ServerCrt   string   `json:"serverCrt"`   // path to server crt file
+	ServerKey   string   `json:"serverKey"`   // path to server key file
+	Namespaces  []string `json:"namespaces"`  // list of allowed namespaces
+	UTC         bool     `json:"utc"`         // use UTC for logging or not
+	Services    []string `json:services`      // list of allowed services
+	Token       string   `json:"token"`       // authorization token
+	MonitRecord bool     `json:"monitRecord"` // print on stdout monit record
 }
 
 // Config variable represents configuration object
@@ -45,8 +48,9 @@ func parseConfig(configFile string) error {
 }
 
 // helper function to hangle errors
-func errorHandler(w http.ResponseWriter, r *http.Request, msg string, err error) {
+func errorHandler(w http.ResponseWriter, r *http.Request, status int, msg string, err error) {
 	log.Println(msg, err)
+	w.WriteHeader(status)
 	w.Write([]byte(msg))
 }
 
@@ -56,7 +60,6 @@ type Request struct {
 	Name      string `json:"name"`      // name of the image
 	Tag       string `json:"tag"`       // tag of the image
 	Repo      string `json:"repo"`      // repository of the image
-	Token     string `json:"token"`     // authentication token
 }
 
 // helper function to change tag in provided string (yaml content)
@@ -67,6 +70,7 @@ func changeTag(s string, r Request) string {
 	return re.ReplaceAllString(s, img)
 }
 
+// helper function to execute request on k8s
 func exeRequest(r Request) error {
 	log.Printf("execute request %+v\n", r)
 	var args []string
@@ -102,18 +106,36 @@ func exeRequest(r Request) error {
 	return nil
 }
 
+// helper function to check auth token
+func auth(r *http.Request) bool {
+	if arr, ok := r.Header["Authorization"]; ok {
+		token := strings.Replace(arr[0], "Bearer ", "", -1)
+		token := strings.Replace(token, "bearer ", "", -1)
+		if token == Config.Token {
+			return true
+		}
+	}
+	return false
+}
+
 // RequestHandler represents incoming request handler
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	status := http.StatusOK
 	start := time.Now()
 	defer logRequest(w, r, start, &status)
+	if !auth(r) {
+		status = http.StatusUnauthorized
+		errorHandler(w, r, status, "unauthorized access", nil)
+		return
+	}
 	if r.Method == "GET" {
 		info := clusterInfo(Config.Namespaces)
 		log.Printf("cluster info: %+v\n", info)
 		data, err := json.Marshal(info)
 		if err != nil {
 			msg := "unable to marshal server info"
-			errorHandler(w, r, msg, err)
+			status = http.StatusInternalServerError
+			errorHandler(w, r, status, msg, err)
 			return
 		}
 		w.WriteHeader(status)
@@ -125,18 +147,21 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&imgRequest)
 	if err != nil {
 		msg := "unable to marshal server settings"
-		errorHandler(w, r, msg, err)
+		status = http.StatusInternalServerError
+		errorHandler(w, r, status, msg, err)
 		return
 	}
 	// check if given request is allowed
 	if !InList(imgRequest.Name, Config.Services) {
 		msg := fmt.Sprintf("provided service %s is not allowed", imgRequest.Name)
-		errorHandler(w, r, msg, nil)
+		status = http.StatusInternalServerError
+		errorHandler(w, r, status, msg, nil)
 		return
 	}
 	if !InList(imgRequest.Namespace, Config.Namespaces) {
 		msg := fmt.Sprintf("provided namespace %s is not allowed", imgRequest.Namespace)
-		errorHandler(w, r, msg, nil)
+		status = http.StatusInternalServerError
+		errorHandler(w, r, status, msg, nil)
 		return
 	}
 
@@ -144,7 +169,8 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	err = exeRequest(imgRequest)
 	if err != nil {
 		msg := "unable to execute request"
-		errorHandler(w, r, msg, err)
+		status = http.StatusInternalServerError
+		errorHandler(w, r, status, msg, err)
 		return
 	}
 	w.WriteHeader(status)

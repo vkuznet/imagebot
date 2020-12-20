@@ -94,11 +94,13 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, status 
 		RequestTime:    time.Since(start).Seconds(),
 		Timestamp:      tstamp,
 	}
-	data, err := json.Marshal(rec)
-	if err != nil {
-		log.Println("ERROR", err)
+	if Config.MonitRecord {
+		data, err := json.Marshal(rec)
+		if err != nil {
+			log.Println("ERROR", err)
+		}
+		log.Println(string(data))
 	}
-	log.Println(string(data))
 
 }
 
