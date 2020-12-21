@@ -60,7 +60,7 @@ jobs:
     - name: Post new image using REST API
       run: |
         curl --request POST \
-		--url ${{ secrets.IMAGEBOT_URL }}
+        --url ${{ secrets.IMAGEBOT_URL }} \
         --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
         --header 'content-type: application/json' \
         --data '{
