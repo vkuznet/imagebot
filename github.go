@@ -13,14 +13,14 @@ import (
 type GitHubObject struct {
 	Sha  string `json:"sha"`
 	Type string `json:"type"`
-	Url  string `json:"url"`
+	URL  string `json:"url"`
 }
 
-// GitHubResponse represents github repsonse
+// GitHubResponse represents github response
 type GitHubResponse struct {
 	Ref    string       `json:"ref"`
-	NodeId string       `json:"node_id"`
-	Url    string       `json:"url"`
+	NodeID string       `json:"node_id"`
+	URL    string       `json:"url"`
 	Object GitHubObject `json:"object"`
 }
 
@@ -45,8 +45,8 @@ func getCommit(r Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if rec.Url != rurl {
-		msg := fmt.Sprintf("github url does not match %s!=%s", rec.Url, rurl)
+	if rec.URL != rurl {
+		msg := fmt.Sprintf("github url does not match %s!=%s", rec.URL, rurl)
 		return "", errors.New(msg)
 	}
 	return rec.Object.Sha, nil

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -70,30 +69,30 @@ func exeRequest(r Request) error {
 func checkRequest(r Request) error {
 	if r.Namespace == "" || r.Tag == "" || r.Repository == "" || r.Commit == "" || r.Service == "" {
 		log.Printf("ERROR, incomplete request %+v\n", r)
-		return errors.New(fmt.Sprintf("incomplete request"))
+		return fmt.Errorf("incomplete request")
 	}
 	if r.Timestamp > time.Now().Unix() && r.Timestamp < (time.Now().Unix()+Config.TokenInterval) {
 		log.Printf("ERROR, request expired %+v\n", r)
-		return errors.New(fmt.Sprintf("expired request"))
+		return fmt.Errorf("expired request")
 	}
 	if commit, err := getCommit(r); commit != r.Commit || err != nil {
 		log.Printf("ERROR, unknown commit %s, request.Commit %v, error %v\n", commit, r.Commit, err)
-		return errors.New(fmt.Sprintf("unknown commit %s", commit))
+		return fmt.Errorf("unknown commit %s", commit)
 	}
 	for idx, srv := range Config.Services {
 		ns := Config.Namespaces[idx]
 		repo := Config.Repositories[idx]
 		if srv != r.Service {
 			log.Printf("ERROR, unknown service %s, request.Service %v\n", srv, r.Service)
-			return errors.New(fmt.Sprintf("unknown service %s", srv))
+			return fmt.Errorf("unknown service %s", srv)
 		}
 		if ns != r.Namespace {
 			log.Printf("ERROR, unknown namespace %s, request.Namespace %v\n", ns, r.Namespace)
-			return errors.New(fmt.Sprintf("unknown namespace %s", ns))
+			return fmt.Errorf("unknown namespace %s", ns)
 		}
 		if repo != r.Repository {
 			log.Printf("ERROR, unknown repository %s, request.Repository %v\n", repo, r.Repository)
-			return errors.New(fmt.Sprintf("unknown repository %s", repo))
+			return fmt.Errorf("unknown repository %s", repo)
 		}
 	}
 	return nil

@@ -14,6 +14,7 @@ import (
 	"strings"
 )
 
+// ContainerStatus represents status information about image container
 type ContainerStatus struct {
 	ContainerID  string                 `json:"ContainerID"`
 	Image        string                 `json:"Image"`
@@ -25,6 +26,7 @@ type ContainerStatus struct {
 	State        map[string]interface{} `json:"State"`
 }
 
+// Metadata represents meta-data information about k8s image
 type Metadata struct {
 	//     Annotations       map[string]string        `json:"Annotations"`
 	//     CreationTimestamp string                   `json:"CreationTimestamp"`
@@ -35,10 +37,12 @@ type Metadata struct {
 	//     OwnerReferences   []map[string]interface{} `json:"OwnerReferences"`
 }
 
+// Spec represents containers maps
 type Spec struct {
 	Containers []map[string]interface{} `json:"Containers"`
 }
 
+// Status represents status reponse about k8s image(s)
 type Status struct {
 	Conditions            []interface{}       `json:"Conditions"`
 	ContainerStatuses     []ContainerStatus   `json:"ContainerStatuses"`
@@ -51,6 +55,7 @@ type Status struct {
 	StartTime             string              `json:"StartTime"`
 }
 
+// PodInfo represents pod information
 type PodInfo struct {
 	//     ApiVersion string   `json:"ApiVersion"`
 	//     Kind       string   `json:"Kind"`
@@ -126,7 +131,7 @@ func InList(a string, list []string) bool {
 	check := 0
 	for _, b := range list {
 		if b == a {
-			check += 1
+			check++
 		}
 	}
 	if check != 0 {
