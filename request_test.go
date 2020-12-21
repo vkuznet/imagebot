@@ -9,7 +9,7 @@ import (
 // TestChangeTag
 func TestChangeTag(t *testing.T) {
 	vals := []string{"bla-bla", "image: repo/srv:tag", "goo-goo"}
-	r := Request{Name: "srv", Namespace: "test", Tag: "123", Repo: "repo"}
+	r := Request{Name: "srv", Namespace: "test", Tag: "123", Repository: "repo"}
 	fmt.Println("input", strings.Join(vals, "\n"))
 	res := changeTag(strings.Join(vals, "\n"), r)
 	fmt.Println("output", res)

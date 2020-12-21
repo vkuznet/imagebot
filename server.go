@@ -3,11 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os/exec"
-	"regexp"
 	"strings"
 	"time"
 
@@ -15,95 +12,11 @@ import (
 	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
 )
 
-// Configuration stores server configuration parameters
-type Configuration struct {
-	Port        int      `json:"port"`        // server port number
-	Base        string   `json:"base"`        // base URL
-	Verbose     int      `json:"verbose"`     // verbose output
-	ServerCrt   string   `json:"serverCrt"`   // path to server crt file
-	ServerKey   string   `json:"serverKey"`   // path to server key file
-	Namespaces  []string `json:"namespaces"`  // list allowed namespaces
-	Services    []string `json:services`      // list allowed services
-	UTC         bool     `json:"utc"`         // use UTC for logging or not
-	Token       string   `json:"token"`       // authorization token
-	MonitRecord bool     `json:"monitRecord"` // print on stdout monit record
-}
-
-// Config variable represents configuration object
-var Config Configuration
-
-// helper function to parse configuration
-func parseConfig(configFile string) error {
-	data, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		log.Println("Unable to read", err)
-		return err
-	}
-	err = json.Unmarshal(data, &Config)
-	if err != nil {
-		log.Println("Unable to parse", err)
-		return err
-	}
-	return nil
-}
-
 // helper function to hangle errors
 func errorHandler(w http.ResponseWriter, r *http.Request, status int, msg string, err error) {
 	log.Println(msg, err)
 	w.WriteHeader(status)
 	w.Write([]byte(msg))
-}
-
-// Request represents image request to the server
-type Request struct {
-	Namespace string `json:"namespace"` // namespace to use
-	Name      string `json:"name"`      // name of the image
-	Tag       string `json:"tag"`       // tag of the image
-	Repo      string `json:"repo"`      // repository of the image
-}
-
-// helper function to change tag in provided string (yaml content)
-func changeTag(s string, r Request) string {
-	pat := fmt.Sprintf("image: %s/%s:.*", r.Repo, r.Name)
-	re := regexp.MustCompile(pat)
-	img := fmt.Sprintf("image: %s/%s:%s", r.Repo, r.Name, r.Tag)
-	return re.ReplaceAllString(s, img)
-}
-
-// helper function to execute request on k8s
-func exeRequest(r Request) error {
-	log.Printf("execute request %+v\n", r)
-	var args []string
-
-	// get yaml of our request image
-	args = []string{"get", "deployment", r.Name, "-n", r.Namespace, "-o", "yaml"}
-	cmd := exec.Command("kubectl", args...)
-	out, err := cmd.Output()
-	if err != nil {
-		return err
-	}
-	yaml := string(out)
-	log.Println("YAML", yaml)
-	// change image tag
-	content := changeTag(yaml, r)
-	log.Println("NEW YAML", content)
-
-	// write new yml file
-	fname := fmt.Sprintf("/tmp/%s-%s-%s-%s.yaml", r.Repo, r.Name, r.Namespace, r.Tag)
-	err = ioutil.WriteFile(fname, []byte(content), 0777)
-	if err != nil {
-		return err
-	}
-
-	// kubectl apply -f file.yml
-	args = []string{"apply", "-f", fname}
-	cmd = exec.Command("kubectl", args...)
-	out, err = cmd.Output()
-	if err != nil {
-		return err
-	}
-	log.Printf("deployed new image %s/%s:%s to namespace %s, output %v\n", r.Repo, r.Name, r.Tag, r.Namespace, out)
-	return nil
 }
 
 // helper function to check auth token
@@ -151,17 +64,12 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		errorHandler(w, r, status, msg, err)
 		return
 	}
-	// check if given request is allowed
-	if !InList(imgRequest.Name, Config.Services) {
-		msg := fmt.Sprintf("provided service %s is not allowed", imgRequest.Name)
+
+	// check that our request is allowed to be processed
+	if err := checkRequest(imgRequest); err != nil {
+		msg := fmt.Sprintf("provided request is not allowed")
 		status = http.StatusInternalServerError
-		errorHandler(w, r, status, msg, nil)
-		return
-	}
-	if !InList(imgRequest.Namespace, Config.Namespaces) {
-		msg := fmt.Sprintf("provided namespace %s is not allowed", imgRequest.Namespace)
-		status = http.StatusInternalServerError
-		errorHandler(w, r, status, msg, nil)
+		errorHandler(w, r, status, msg, err)
 		return
 	}
 
