@@ -76,7 +76,7 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	// execute request
 	err = exeRequest(imgRequest)
 	if err != nil {
-		msg := "unable to execute request"
+		msg := "unable to process request"
 		status = http.StatusInternalServerError
 		errorHandler(w, r, status, msg, err)
 		return

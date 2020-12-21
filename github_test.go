@@ -6,7 +6,7 @@ import (
 
 // TestGetCommit
 func TestGetCommit(t *testing.T) {
-	r := Request{Name: "imagebot", Namespace: "test", Tag: "00.00.01", Repository: "vkuznet/imagebot"}
+	r := Request{Service: "imagebot", Namespace: "test", Tag: "00.00.01", Repository: "vkuznet/imagebot"}
 	sha, err := getCommit(r)
 	if err != nil {
 		t.Errorf("Fail TestGetCommit, %v\n", err)

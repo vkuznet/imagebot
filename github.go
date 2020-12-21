@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -17,10 +18,10 @@ type GitHubObject struct {
 
 // GitHubResponse represents github repsonse
 type GitHubResponse struct {
-	Ref    string `json:"ref"`
-	NodeId string `json:"node_id"`
-	Url    string `json:"url"`
-	Object GitHubObject
+	Ref    string       `json:"ref"`
+	NodeId string       `json:"node_id"`
+	Url    string       `json:"url"`
+	Object GitHubObject `json:"object"`
 }
 
 // helper function to get commit of the request
@@ -33,6 +34,9 @@ func getCommit(r Request) (string, error) {
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	if Config.Verbose > 0 {
+		log.Println("call", rurl, "response", string(body))
+	}
 	if err != nil {
 		return "", err
 	}
