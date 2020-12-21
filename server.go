@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -146,14 +148,53 @@ func server(serverCrt, serverKey string) {
 
 	// start HTTP or HTTPs server based on provided configuration
 	addr := fmt.Sprintf(":%d", Config.Port)
-	if serverCrt != "" && serverKey != "" {
-		//start HTTPS server which require user certificates
-		server := &http.Server{Addr: addr}
-		log.Printf("Starting HTTPs server on %s", addr)
-		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
-	} else {
+	if serverCrt == "" && serverKey == "" {
 		// Start server without user certificates
 		log.Printf("Starting HTTP server on %s", addr)
 		log.Fatal(http.ListenAndServe(addr, nil))
+	} else {
+		// start HTTP or HTTPs server based on provided configuration
+		rootCAs := x509.NewCertPool()
+		files, err := ioutil.ReadDir(Config.RootCAs)
+		if err != nil {
+			log.Fatalf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
+		}
+		for _, finfo := range files {
+			fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
+			caCert, err := ioutil.ReadFile(fname)
+			if err != nil {
+				if Config.Verbose > 1 {
+					log.Printf("Unable to read %s\n", fname)
+				}
+			}
+			if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
+				if Config.Verbose > 1 {
+					log.Printf("invalid PEM format while importing trust-chain: %q", fname)
+				}
+			}
+			log.Println("Load CA file", fname)
+		}
+		cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
+		if err != nil {
+			log.Fatalf("server loadkeys: %s", err)
+
+		}
+		tlsConfig := &tls.Config{
+			RootCAs:      rootCAs,
+			Certificates: []tls.Certificate{cert},
+		}
+		addr := fmt.Sprintf(":%d", Config.Port)
+		server := &http.Server{
+			Addr:           addr,
+			TLSConfig:      tlsConfig,
+			ReadTimeout:    time.Duration(Config.ReadTimeout) * time.Second,
+			WriteTimeout:   time.Duration(Config.WriteTimeout) * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		}
+
+		//start HTTPS server which require user certificates
+		log.Printf("Starting HTTPs server on %s", addr)
+		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
+
 	}
 }

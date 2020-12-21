@@ -45,5 +45,5 @@ func main() {
 		log.Printf("%+v\n", Config)
 	}
 
-	server("", "")
+	server(Config.ServerCrt, Config.ServerKey)
 }
