@@ -48,21 +48,8 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	defer logRequest(w, r, start, &status)
 	if r.Method == "GET" {
-		status = http.StatusBadRequest
-		errorHandler(w, r, status, "", nil)
+		w.WriteHeader(http.StatusBadRequest)
 		return
-		//         info := clusterInfo(Config.Namespaces)
-		//         log.Printf("cluster info: %+v\n", info)
-		//         data, err := json.Marshal(info)
-		//         if err != nil {
-		//             msg := "unable to marshal server info"
-		//             status = http.StatusInternalServerError
-		//             errorHandler(w, r, status, msg, err)
-		//             return
-		//         }
-		//         w.WriteHeader(status)
-		//         w.Write(data)
-		//         return
 	}
 	defer r.Body.Close()
 	var imgRequest = Request{}
@@ -112,8 +99,7 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	defer logRequest(w, r, start, &status)
 	if r.Method != "GET" {
-		status = http.StatusInternalServerError
-		w.WriteHeader(status)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(status)
@@ -126,25 +112,24 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	defer logRequest(w, r, start, &status)
 	if r.Method != "POST" {
-		status = http.StatusInternalServerError
-		w.WriteHeader(status)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 	var imgRequest = Request{}
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		msg := "unable to read request body"
-		status = http.StatusInternalServerError
-		errorHandler(w, r, status, msg, err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = json.Unmarshal(data, &imgRequest)
+	if err = json.Unmarshal(data, &imgRequest); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	imgRequest.Timestamp = time.Now().Unix() + Config.TokenInterval
 	token, err := genToken(imgRequest)
 	if err != nil {
-		status = http.StatusInternalServerError
-		w.WriteHeader(status)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(status)

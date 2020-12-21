@@ -42,7 +42,7 @@ type Spec struct {
 	Containers []map[string]interface{} `json:"Containers"`
 }
 
-// Status represents status reponse about k8s image(s)
+// Status represents status response about k8s image(s)
 type Status struct {
 	Conditions            []interface{}       `json:"Conditions"`
 	ContainerStatuses     []ContainerStatus   `json:"ContainerStatuses"`
