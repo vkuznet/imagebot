@@ -65,8 +65,8 @@ jobs:
         --header 'content-type: application/json' \
         --data '{
           "commit": "${{ github.sha }}",
-		  "namespace": "${{ github.SERVICE_NAMESPACE }}",
-		  "repository": "${{ github.repository }}",
-		  "workflow": "${{ github.workflow }}"
+          "namespace": "${{ github.SERVICE_NAMESPACE }}",
+          "repository": "${{ github.repository }}",
+          "workflow": "${{ github.workflow }}"
           }'
 ```
