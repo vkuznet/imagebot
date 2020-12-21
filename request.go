@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
 	"regexp"
+	"time"
 )
 
 // Request represents image request to the server
@@ -16,6 +19,7 @@ type Request struct {
 	Repository string `json:"repository"` // repository of the image
 	Commit     string `json:"commit"`     // commit SHA of this tag
 	Service    string `json:"service"`    // service name
+	Timestamp  int64  `json:"timestamp"`  // valid timestamp of request
 }
 
 // helper function to change tag in provided string (yaml content)
@@ -68,6 +72,10 @@ func checkRequest(r Request) error {
 		log.Printf("ERROR, incomplete request %+v\n", r)
 		return errors.New(fmt.Sprintf("incomplete request"))
 	}
+	if r.Timestamp > time.Now().Unix() && r.Timestamp < (time.Now().Unix()+Config.TokenInterval) {
+		log.Printf("ERROR, request expired %+v\n", r)
+		return errors.New(fmt.Sprintf("expired request"))
+	}
 	if commit, err := getCommit(r); commit != r.Commit || err != nil {
 		log.Printf("ERROR, unknown commit %s, request.Commit %v, error %v\n", commit, r.Commit, err)
 		return errors.New(fmt.Sprintf("unknown commit %s", commit))
@@ -89,4 +97,39 @@ func checkRequest(r Request) error {
 		}
 	}
 	return nil
+}
+
+// helper function to compare requests
+func compareRequests(r1, r2 Request) bool {
+	if r1.Namespace == r2.Namespace || r1.Service == r2.Service || r1.Tag == r2.Tag || r1.Repository == r2.Repository || r1.Commit == r2.Commit {
+		return true
+	}
+	log.Printf("requests do not match: %+v != %+v\n", r1, r2)
+	return false
+}
+
+// helper function to generate token
+func genToken(r Request) (string, error) {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return "", err
+	}
+	data, err = encrypt(data, Config.Secret)
+	hash := base64.StdEncoding.EncodeToString(data)
+	return hash, err
+}
+
+// helper function to decode token
+func decodeToken(t string) (Request, error) {
+	var r Request
+	data, err := base64.StdEncoding.DecodeString(t)
+	if err != nil {
+		return r, err
+	}
+	data, err = decrypt(data, Config.Secret)
+	if err != nil {
+		return r, err
+	}
+	err = json.Unmarshal(data, &r)
+	return r, err
 }

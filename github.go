@@ -35,7 +35,7 @@ func getCommit(r Request) (string, error) {
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if Config.Verbose > 0 {
-		log.Println("call", rurl, "response", string(body))
+		log.Println("request", rurl, "response", string(body))
 	}
 	if err != nil {
 		return "", err
