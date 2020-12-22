@@ -18,7 +18,7 @@ type Request struct {
 	Repository string `json:"repository"` // repository of the image
 	Commit     string `json:"commit"`     // commit SHA of this tag
 	Service    string `json:"service"`    // service name
-	Timestamp  int64  `json:"timestamp"`  // valid timestamp of request
+	Expire     int64  `json:"timestamp"`  // valid timestamp of request
 }
 
 // helper function to change tag in provided string (yaml content)
@@ -71,7 +71,7 @@ func checkRequest(r Request) error {
 		log.Printf("ERROR, incomplete request %+v\n", r)
 		return fmt.Errorf("incomplete request")
 	}
-	if r.Timestamp > time.Now().Unix() && r.Timestamp < (time.Now().Unix()+Config.TokenInterval) {
+	if r.Expire > time.Now().Unix() && r.Expire < (time.Now().Unix()+Config.TokenInterval) {
 		log.Printf("ERROR, request expired %+v\n", r)
 		return fmt.Errorf("expired request")
 	}

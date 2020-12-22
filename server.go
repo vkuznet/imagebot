@@ -128,7 +128,7 @@ func TokenHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	imgRequest.Timestamp = time.Now().Unix() + Config.TokenInterval
+	imgRequest.Expire = time.Now().Unix() + Config.TokenInterval
 	token, err := genToken(imgRequest)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
