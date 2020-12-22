@@ -18,6 +18,7 @@ imagebot to update images on k8s infrastructure
 please create appropriate GitHub secrets in your github repository:
 - `IMAGEBOT_URL` represents URL of imagebot service
 - `SERVICE_NAMESPACE` refers to application namespace
+- `DOCKER_IMAGE` referts to docker hub image name
 
 Please note: your namespace should be part of imagebot configuration
 
@@ -67,6 +68,6 @@ jobs:
           "commit": "${{ github.sha }}",
           "namespace": "${{ github.SERVICE_NAMESPACE }}",
           "repository": "${{ github.repository }}",
-          "workflow": "${{ github.workflow }}"
+          "image": "${{ github.DOCKER_IMAGE }}"
           }'
 ```
