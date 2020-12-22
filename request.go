@@ -18,7 +18,7 @@ type Request struct {
 	Repository string `json:"repository"` // repository of the image
 	Commit     string `json:"commit"`     // commit SHA of this tag
 	Service    string `json:"service"`    // service name
-	Expire     int64  `json:"timestamp"`  // valid timestamp of request
+	Expire     int64  `json:"expire"`     // expire timestamp of request
 }
 
 // helper function to change tag in provided string (yaml content)

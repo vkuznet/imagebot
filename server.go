@@ -66,7 +66,7 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(data, &imgRequest)
 	if err != nil {
 		status = http.StatusInternalServerError
-		log.Println("unable to marshal request", err)
+		log.Println("unable to marshal request", string(data), err)
 		w.WriteHeader(status)
 		return
 	}
