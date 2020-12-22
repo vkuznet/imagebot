@@ -72,7 +72,7 @@ func checkRequest(r Request) error {
 		log.Printf("ERROR, incomplete request %+v\n", r)
 		return fmt.Errorf("incomplete request")
 	}
-	if r.Expire > time.Now().Unix() && r.Expire < (time.Now().Unix()+Config.TokenInterval) {
+	if r.Expire < time.Now().Unix() {
 		log.Printf("ERROR, request expired %+v\n", r)
 		return fmt.Errorf("expired request")
 	}
