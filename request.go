@@ -62,7 +62,7 @@ func exeRequest(r Request) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("deployed new image %s:%s to namespace %s, output %v\n", r.Repository, r.Tag, r.Namespace, out)
+	log.Printf("deployed new image %s:%s to namespace %s, output %v\n", r.Repository, r.Tag, r.Namespace, string(out))
 	return nil
 }
 
