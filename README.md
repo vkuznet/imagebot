@@ -35,7 +35,7 @@ The configuration of the service should include
     "base": "",
     "namespaces": ["ns1", "ns2"],
     "services": ["srv1", "srv2"],
-    "repositories": ["repo1/srv1", "repo2/srv2"],
+    "images": ["repo1/srv1", "repo2/srv2"],
     "secret": "bla-bla-bla",
     "tokenInverval": 600,
     "verbose": 1

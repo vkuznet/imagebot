@@ -19,7 +19,7 @@ type Configuration struct {
 	Secret        string   `json:"secret"`        // secret passphrase for encoding/decoding tokens
 	Namespaces    []string `json:"namespaces"`    // list allowed namespaces
 	Services      []string `json:"services"`      // list allowed services
-	Repositories  []string `json:"repositories"`  // list allowed repositories
+	Images        []string `json:"images"`        // list of allowed docker hub images
 	UTC           bool     `json:"utc"`           // use UTC for logging or not
 	MonitRecord   bool     `json:"monitRecord"`   // print on stdout monit record
 	TokenInterval int64    `json:"tokenInterval"` // token validity interval in seconds
