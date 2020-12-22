@@ -13,20 +13,20 @@ import (
 
 // Request represents image request to the server
 type Request struct {
-	Namespace   string `json:"namespace"`   // namespace to use
-	Tag         string `json:"tag"`         // tag of the image
-	Repository  string `json:"repository"`  // github repository of the image codebase
-	DockerImage string `json:"dockerImage"` // name of docker image
-	Commit      string `json:"commit"`      // commit SHA of this tag
-	Service     string `json:"service"`     // service name
-	Expire      int64  `json:"expire"`      // expire timestamp of request
+	Namespace  string `json:"namespace"`  // namespace to use
+	Tag        string `json:"tag"`        // tag of the image
+	Repository string `json:"repository"` // github repository of the image codebase
+	Image      string `json:"image"`      // name of docker image
+	Commit     string `json:"commit"`     // commit SHA of this tag
+	Service    string `json:"service"`    // service name
+	Expire     int64  `json:"expire"`     // expire timestamp of request
 }
 
 // helper function to change tag in provided string (yaml content)
 func changeTag(s string, r Request) string {
-	pat := fmt.Sprintf("image: %s.*", r.DockerImage)
+	pat := fmt.Sprintf("image: %s.*", r.Image)
 	re := regexp.MustCompile(pat)
-	img := fmt.Sprintf("image: %s:%s", r.DockerImage, r.Tag)
+	img := fmt.Sprintf("image: %s:%s", r.Image, r.Tag)
 	return re.ReplaceAllString(s, img)
 }
 
@@ -63,13 +63,13 @@ func exeRequest(r Request) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("deployed new image %s:%s to namespace %s from github repostiory %s, output %v\n", r.DockerImage, r.Tag, r.Namespace, r.Repository, string(out))
+	log.Printf("deployed new image %s:%s to namespace %s from github repostiory %s, output %v\n", r.Image, r.Tag, r.Namespace, r.Repository, string(out))
 	return nil
 }
 
 // helper function to check incoming request
 func checkRequest(r Request) error {
-	if r.Namespace == "" || r.Tag == "" || r.Repository == "" || r.DockerImage == "" || r.Commit == "" || r.Service == "" {
+	if r.Namespace == "" || r.Tag == "" || r.Repository == "" || r.Image == "" || r.Commit == "" || r.Service == "" {
 		log.Printf("ERROR, incomplete request %+v\n", r)
 		return fmt.Errorf("incomplete request")
 	}
@@ -92,8 +92,8 @@ func checkRequest(r Request) error {
 			log.Printf("ERROR, unknown namespace %s, request.Namespace %v\n", ns, r.Namespace)
 			return fmt.Errorf("unknown namespace %s", ns)
 		}
-		if image != r.DockerImage {
-			log.Printf("ERROR, unknown image %s, request.DockerImage %v\n", image, r.DockerImage)
+		if image != r.Image {
+			log.Printf("ERROR, unknown image %s, request.Image %v\n", image, r.Image)
 			return fmt.Errorf("unknown image %s", image)
 		}
 	}
@@ -102,7 +102,7 @@ func checkRequest(r Request) error {
 
 // helper function to compare requests
 func compareRequests(r1, r2 Request) bool {
-	if r1.Namespace == r2.Namespace || r1.Service == r2.Service || r1.Tag == r2.Tag || r1.Repository == r2.Repository || r1.Commit == r2.Commit || r1.DockerImage == r2.DockerImage {
+	if r1.Namespace == r2.Namespace || r1.Service == r2.Service || r1.Tag == r2.Tag || r1.Repository == r2.Repository || r1.Commit == r2.Commit || r1.Image == r2.Image {
 		return true
 	}
 	log.Printf("requests do not match: %+v != %+v\n", r1, r2)

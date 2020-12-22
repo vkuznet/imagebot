@@ -11,7 +11,7 @@ func TestChangeTag(t *testing.T) {
 	vals := []string{"bla-bla", "   - image: repo/srv:tag", "goo-goo"}
 	res := strings.Join(vals, "\n")
 	log.Println("old image\n", res)
-	r := Request{Service: "srv", Namespace: "test", Tag: "123", Repository: "repo/srv"}
+	r := Request{Service: "srv", Namespace: "test", Tag: "123", Repository: "xxx/srv", Image: "repo/srv"}
 	res = changeTag(strings.Join(vals, "\n"), r)
 	log.Println("new image\n", res)
 	if !strings.Contains(res, "123") {
@@ -24,7 +24,7 @@ func TestChangeTagNoTag(t *testing.T) {
 	vals := []string{"bla-bla", "    - image: repo/srv", "goo-goo"}
 	res := strings.Join(vals, "\n")
 	log.Println("old image\n", res)
-	r := Request{Service: "srv", Namespace: "test", Tag: "123", Repository: "repo/srv"}
+	r := Request{Service: "srv", Namespace: "test", Tag: "123", Repository: "xxx/srv", Image: "repo/srv"}
 	res = changeTag(res, r)
 	log.Println("new image\n", res)
 	if !strings.Contains(res, "123") {
