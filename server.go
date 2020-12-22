@@ -15,13 +15,6 @@ import (
 	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
 )
 
-// helper function to hangle errors
-func errorHandler(w http.ResponseWriter, r *http.Request, status int, msg string, err error) {
-	log.Println(msg, err)
-	w.WriteHeader(status)
-	w.Write([]byte(msg + "\n"))
-}
-
 // helper function to check auth token and compare it with given image request
 func auth(r *http.Request, request Request) bool {
 	if arr, ok := r.Header["Authorization"]; ok {
@@ -50,46 +43,47 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	defer logRequest(w, r, start, &status)
 	if r.Method == "GET" {
-		w.WriteHeader(http.StatusBadRequest)
+		status = http.StatusBadRequest
+		log.Println("GET method is not allowed")
+		w.WriteHeader(status)
+		return
+	}
+	if _, ok := r.Header["Authorization"]; !ok {
+		status = http.StatusUnauthorized
+		log.Println("no authorization token is provided")
+		w.WriteHeader(status)
 		return
 	}
 	defer r.Body.Close()
 	var imgRequest = Request{}
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		msg := "unable to read request body"
 		status = http.StatusInternalServerError
-		errorHandler(w, r, status, msg, err)
+		log.Println("unable to read request body", err)
+		w.WriteHeader(status)
 		return
 	}
 	err = json.Unmarshal(data, &imgRequest)
 	if err != nil {
-		msg := "unable to marshal server settings"
 		status = http.StatusInternalServerError
-		errorHandler(w, r, status, msg, err)
+		log.Println("unable to marshal request", err)
+		w.WriteHeader(status)
 		return
 	}
 	// check if given image request match the token
 	if !auth(r, imgRequest) {
 		status = http.StatusUnauthorized
-		errorHandler(w, r, status, "unauthorized access", nil)
+		log.Println("unauthorized access")
+		w.WriteHeader(status)
 		return
 	}
-
-	// check that our request is allowed to be processed
-	//     if err := checkRequest(imgRequest); err != nil {
-	//         msg := fmt.Sprintf("provided request is not allowed")
-	//         status = http.StatusInternalServerError
-	//         errorHandler(w, r, status, msg, err)
-	//         return
-	//     }
 
 	// execute request
 	err = exeRequest(imgRequest)
 	if err != nil {
-		msg := "unable to process request"
 		status = http.StatusInternalServerError
-		errorHandler(w, r, status, msg, err)
+		log.Println("unable to process request")
+		w.WriteHeader(status)
 		return
 	}
 	w.WriteHeader(status)
