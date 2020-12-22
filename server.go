@@ -82,7 +82,7 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	err = exeRequest(imgRequest)
 	if err != nil {
 		status = http.StatusInternalServerError
-		log.Println("unable to process request")
+		log.Printf("unable to process request: %+v, error %v", imgRequest, err)
 		w.WriteHeader(status)
 		return
 	}
