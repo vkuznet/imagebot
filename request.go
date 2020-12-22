@@ -23,7 +23,7 @@ type Request struct {
 
 // helper function to change tag in provided string (yaml content)
 func changeTag(s string, r Request) string {
-	pat := fmt.Sprintf("image: %s:.*", r.Repository)
+	pat := fmt.Sprintf("image: %s.*", r.Repository)
 	re := regexp.MustCompile(pat)
 	img := fmt.Sprintf("image: %s:%s", r.Repository, r.Tag)
 	return re.ReplaceAllString(s, img)
@@ -48,7 +48,8 @@ func exeRequest(r Request) error {
 	log.Println("NEW YAML", content)
 
 	// write new yml file
-	fname := fmt.Sprintf("/tmp/%s-%s-%s-%s.yaml", r.Repository, r.Service, r.Namespace, r.Tag)
+	fname := fmt.Sprintf("/tmp/%s-%s-%s.yaml", r.Service, r.Namespace, r.Tag)
+	log.Println("fname", fname)
 	err = ioutil.WriteFile(fname, []byte(content), 0777)
 	if err != nil {
 		return err
