@@ -44,6 +44,27 @@ The configuration of the service should include
 ```
 For the full set of allowed parameters please see `server.go` code.
 
+### Testing procedure
+To test the service please run it as following:
+```
+imagebot -config config.json
+```
+and place two requests:
+```
+# first request to obtain the token
+curl -v -X POST -H "content-type: application/json" \
+    -d '{"commit":"dad51084ea82ab2f6f573b6daa464ed0d7c23a1d", "namespace": "http", \
+         "repository": "vkuznet/httpgo", "tag":"00.00.01", "image": "httpgo:123", \
+         "service":"httpgo"}' http://localhost:8111/token
+
+
+# second request to process workflow
+curl -v -X POST -H "Authorization: Bearer $token" -H "content-type: application/json" \
+    -d '{"commit":"dad51084ea82ab2f6f573b6daa464ed0d7c23a1d", "namespace": "http", \
+         "repository": "vkuznet/httpgo", "tag":"00.00.01", "image": "httpgo:123", \
+         "service":"httpgo"}' http://localhost:8111
+```
+
 ### repository settings
 GitHub package should have the following workflow steps:
 ```
@@ -61,6 +82,17 @@ jobs:
     - name: Post new image using REST API
       run: |
         curl --request POST \
+        --url ${{ secrets.IMAGEBOT_URL }}/token \
+        --header 'content-type: application/json' \
+        --data '{
+          "commit": "${{ github.sha }}",
+          "namespace": "${{ github.SERVICE_NAMESPACE }}",
+          "repository": "${{ github.repository }}",
+          "tag": <repo>/<package>:${{steps.get-ref.outputs.tag}},
+          "image": "${{ github.DOCKER_IMAGE }}",
+          "service": "<NAME_OF_YOUR_SERVICE>"
+          }'
+        curl --request POST \
         --url ${{ secrets.IMAGEBOT_URL }} \
         --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
         --header 'content-type: application/json' \
@@ -68,6 +100,8 @@ jobs:
           "commit": "${{ github.sha }}",
           "namespace": "${{ github.SERVICE_NAMESPACE }}",
           "repository": "${{ github.repository }}",
-          "image": "${{ github.DOCKER_IMAGE }}"
+          "tag": <repo>/<package>:${{steps.get-ref.outputs.tag}},
+          "image": "${{ github.DOCKER_IMAGE }}",
+          "service": "<NAME_OF_YOUR_SERVICE>"
           }'
 ```
