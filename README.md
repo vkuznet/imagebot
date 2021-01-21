@@ -78,30 +78,11 @@ jobs:
     steps:
     #
     ####### ADD THIS STEP to your GitHubAction workflow
-    #
-    - name: Post new image using REST API
+    # and replace NAMESPACE, SERVICE, IMAGE with appropriate values
+    - name: Push new image to k8s
       run: |
-        curl --request POST \
-        --url ${{ secrets.IMAGEBOT_URL }}/token \
-        --header 'content-type: application/json' \
-        --data '{
-          "commit": "${{ github.sha }}",
-          "namespace": "${{ github.SERVICE_NAMESPACE }}",
-          "repository": "${{ github.repository }}",
-          "tag": <repo>/<package>:${{steps.get-ref.outputs.tag}},
-          "image": "${{ github.DOCKER_IMAGE }}",
-          "service": "<NAME_OF_YOUR_SERVICE>"
-          }'
-        curl --request POST \
-        --url ${{ secrets.IMAGEBOT_URL }} \
-        --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-        --header 'content-type: application/json' \
-        --data '{
-          "commit": "${{ github.sha }}",
-          "namespace": "${{ github.SERVICE_NAMESPACE }}",
-          "repository": "${{ github.repository }}",
-          "tag": <repo>/<package>:${{steps.get-ref.outputs.tag}},
-          "image": "${{ github.DOCKER_IMAGE }}",
-          "service": "<NAME_OF_YOUR_SERVICE>"
-          }'
+        curl -ksLO https://raw.githubusercontent.com/vkuznet/imagebot/main/imagebot.sh
+        sed -i -e "s,COMMIT,${{github.sha}},g" -e "s,REPOSITORY,${{github.repository}},g" -e "s,NAMESPACE,http,g" -e "s,TAG,${{steps.get-ref.outputs.tag}},g" -e "s,IMAGE,cmssw/httpgo,g" -e "s,SERVICE,httpgo,g" -e "s,HOST,${{secrets.IMAGEBOT_URL}},g" imagebot.sh
+        chmod +x imagebot.sh
+        sh ./imagebot.sh
 ```
