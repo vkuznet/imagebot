@@ -81,21 +81,27 @@ func checkRequest(r Request) error {
 		log.Printf("ERROR, unknown commit %s, request.Commit %v, error %v\n", commit, r.Commit, err)
 		return fmt.Errorf("unknown commit %s", commit)
 	}
+	var match bool
 	for idx, srv := range Config.Services {
 		ns := Config.Namespaces[idx]
 		image := Config.Images[idx]
-		if srv != r.Service {
-			log.Printf("ERROR, unknown service %s, request.Service %v\n", srv, r.Service)
-			return fmt.Errorf("unknown service %s", srv)
+		if srv == r.Service {
+			match = true
+			if ns != r.Namespace {
+				log.Printf("ERROR, unknown namespace %s, request.Namespace %v\n", ns, r.Namespace)
+				return fmt.Errorf("unknown namespace %s", ns)
+			}
+			if image != r.Image {
+				log.Printf("ERROR, unknown image %s, request.Image %v\n", image, r.Image)
+				return fmt.Errorf("unknown image %s", image)
+			}
+		} else {
+			continue
 		}
-		if ns != r.Namespace {
-			log.Printf("ERROR, unknown namespace %s, request.Namespace %v\n", ns, r.Namespace)
-			return fmt.Errorf("unknown namespace %s", ns)
-		}
-		if image != r.Image {
-			log.Printf("ERROR, unknown image %s, request.Image %v\n", image, r.Image)
-			return fmt.Errorf("unknown image %s", image)
-		}
+	}
+	if !match {
+		log.Println("No matching service found in k8s for given request")
+		return fmt.Errorf("No matching service found for request %+v", r)
 	}
 	return nil
 }
